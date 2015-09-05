@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Script-Loader</title>
+
+        <link rel="stylesheet" href="dev/css/reset.css">
+        <link rel="stylesheet" href="dev/css/layout.css">
+    </head>
+    <body class="bright">
+        <div class="wrapper">
+            <h1>Script-Loader</h1>
+            <p>...</p>
+        </div>
+        <script src="dev/js/script-loader.js"></script>
+
+        <script>
+            var scriptLoader = new ScriptLoader();
+
+            scriptLoader.require({
+                files : [
+                    'path/to/file1.js',
+                    'path/to/file2.js'
+                ],
+                onScriptLoaded : onScriptLoaded,
+                onAllLoaded    : onAllLoaded,
+                onError        : onError
+            });
+
+            function onAllLoaded() {
+                console.log('All script files has been loaded.')
+            }
+
+            function onScriptLoaded(script) {
+                console.log('Script file ' + script.src + ' has been loaded.');
+            }
+
+            function onError(filename) {
+                console.log('Script file ' + filename + ' could not be loaded.');
+            }
+        </script>
+    </body>
+</html>
