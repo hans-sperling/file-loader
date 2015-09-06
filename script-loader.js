@@ -1,7 +1,9 @@
 /**
  * Asynchronous javascript file loader.
  *
+ * @version 0.1.0
  * @return {{require:function()}}
+ * @link https://github.com/hans-sperling/script-loader
  * @example
  * var scriptLoader = new ScriptLoader();
  *
