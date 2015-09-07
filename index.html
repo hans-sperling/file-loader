@@ -2,41 +2,49 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Script-Loader</title>
+        <title>File-Loader</title>
+        <style>
+            body {
+                /* Will be overwritten by file3.css */
+                background : #EF5E48;
+            }
+        </style>
     </head>
     <body class="bright">
         <div class="wrapper">
-            <h1>Script-Loader</h1>
-            <p>Example - View output in the console</p>
+            <h1>File-Loader</h1>
+            <p>Example - View output in the console and CSS-Color of the body.</p>
         </div>
 
         <!-- Load the script-loader file -->
-        <script src="script-loader.js"></script>
+        <script src="file-loader.js"></script>
 
-        <!-- Usage of the Script-Loader -->
+        <!-- Usage of the File-Loader -->
         <script>
-            var scriptLoader = new ScriptLoader();
+            var fileLoader = new FileLoader();
 
-            scriptLoader.require({
+            fileLoader.require({
                 files : [
-                    'path/to/file1.js',
-                    'path/to/file2.js'
+                    'loading-files/file1.js',
+                    'loading-files/file2.min.js',
+                    'load/a/non-existing/file.abc',
+                    'loading-files/file3.css'
                 ],
-                onScriptLoaded : onScriptLoaded,
-                onAllLoaded    : onAllLoaded,
-                onError        : onError
+                onFileLoaded : onFileLoaded,
+                onAllLoaded  : onAllLoaded,
+                onError      : onError
             });
 
             function onAllLoaded() {
-                console.log('All script files has been loaded.')
+                console.info('index.html : All files has been loaded.')
             }
 
-            function onScriptLoaded(script) {
-                console.log('Script file ' + script.src + ' has been loaded.');
+            function onFileLoaded(filename) {
+                console.log('index.html : File <' + filename + '> has been loaded.');
             }
 
             function onError(filename) {
-                console.log('Script file ' + filename + ' could not be loaded.');
+                console.warn('index.html : File <' + filename + '> could not be loaded.');
             }
         </script>
     </body>
