@@ -3,7 +3,7 @@
  *
  * @version 0.2.0
  * @return {{require:function()}}
- * @link https://github.com/hans-sperling/script-loader
+ * @link https://github.com/hans-sperling/file-loader
  * @example
  * var fileLoader = new FileLoader();
  *
