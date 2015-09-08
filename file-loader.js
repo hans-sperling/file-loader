@@ -77,14 +77,19 @@
      * Returns a HTML-Link-Element for given href.
      *
      * @param {String} href
-     * @returns {HTMLElement}
+     * @param {number} amount
+     * @returns {Array} - List of HTMLElements
      */
-    function getCSS(href) {
-        var fileObject = document.createElement('link');
+    function getCSS(href, amount) {
+        var fileObject = [],
+            i;
 
-        fileObject.rel  = 'stylesheet';
-        fileObject.async = true;
-        fileObject.href  = href;
+        for ( i = 0; i < amount; i++) {
+            fileObject[i]       = document.createElement('link');
+            fileObject[i].rel   = 'stylesheet';
+            fileObject[i].async = true;
+            fileObject[i].href  = href;
+        }
 
         return fileObject;
     }
@@ -94,16 +99,31 @@
      * Returns a HTML-Script-Element for given source file.
      *
      * @param {String} src
-     * @returns {HTMLElement}
+     * @param {Number} amount
+     * @returns {Array} - List of HTMLElements
      */
-    function getJS(src) {
-        var fileObject = document.createElement('script');
+    function getJS(src, amount) {
+        var fileObject = [],
+            i;
 
-        fileObject.type  = 'text/javascript';
-        fileObject.async = true;
-        fileObject.src   = src;
+        for ( i = 0; i < amount; i++) {
+            fileObject[i]       = document.createElement('script');
+            fileObject[i].type  = 'text/javascript';
+            fileObject[i].async = true;
+            fileObject[i].src   = src;
+        }
 
         return fileObject;
+    }
+
+
+    function getTemplate(src) {
+        var fileContent = '';
+
+
+        //fileObject.src   = src; // ???
+
+        return fileContent;
     }
 
 
@@ -111,56 +131,71 @@
      * Adds the given file to the head of the DOM if possible and callbacks the onFileLoad-Function. If an error
      * occurred the callback onError will be called.
      *
-     * @param {String} src - Location of the file
+     * @param {String} src         - Location of the file
+     * @param {String} domSelector -
      */
-    function addFile(src) {
-        var fileObject = null,
-            head       = document.getElementsByTagName('head')[0],
+    function addFile(src, domSelector) {
+        var fileObjects = [],
             splitList  = src.split('.'),
-            ext        = splitList[splitList.length - 1];
+            ext        = splitList[splitList.length - 1],
+            selector   = domSelector || null,
+            selectorList, selectorListAmount, i;
+
+        if (!selector) {
+            onError(src, domSelector);
+            loaded();
+            return;
+        }
+
+        selectorList       = document.querySelectorAll(domSelector);
+        selectorListAmount = selectorList.length;
 
         switch (ext.toLocaleLowerCase()) {
             case 'js':
-                fileObject = getJS(src);
+                fileObjects = getJS(src, selectorListAmount);
                 break;
             case 'css':
-                fileObject = getCSS(src);
+                fileObjects = getCSS(src, selectorListAmount);
                 break;
+            case 'html':
+            case 'phtml':
+            case 'php':
             default:
-                onError(src);
-                loaded();
-                return;
-                break;
+                fileObjects = getTemplate(src);
         }
 
-        if(fileObject.addEventListener) {
-            fileObject.addEventListener('load', function () {
-                onFileLoaded(src);
-                loaded();
-            }, false);
-        }
-        else if(fileObject.attachEvent) {
-            fileObject.attachEvent('load', function () {
-                onFileLoaded(src);
-                loaded();
-            });
-        }
-        else {
-            fileObject.onreadystatechange = function() {
-                if (fileObject.readyState in { loaded : 1, complete : 1 }) {
+
+        for ( i = 0; i < selectorListAmount; i++) {
+            if (fileObjects[i].addEventListener) {
+                fileObjects[i].addEventListener('load', function () {
                     onFileLoaded(src);
                     loaded();
-                }
+                }, false);
+            }
+            else if (fileObjects[i].attachEvent) {
+                fileObjects[i].attachEvent('load', function () {
+                    onFileLoaded(src);
+                    loaded();
+                });
+            }
+            else {
+                fileObjects[i].onreadystatechange = function () {
+                    if (this.readyState in {loaded: 1, complete: 1}) {
+                        onFileLoaded(src);
+                        loaded();
+                    }
+                };
+            }
+
+            fileObjects[i].onerror = function () {
+                onError(src, domSelector);
+                loaded();
             };
+
+            selectorList[i].appendChild(fileObjects[i]);
         }
-
-        fileObject.onerror = function() {
-            onError(src);
-            loaded();
-        };
-
-        head.appendChild(fileObject);
     }
+
 
     // ---------------------------------------------------------------------------------------------------------- Public
 
@@ -177,8 +212,8 @@
         var param = parameters  || {},
             i, amount;
 
-        if (!isArray(param.files)) {
-            param.files = [];
+        if (!isArray(param.list)) {
+            param.list = [];
         }
 
         if (!isFunction(param.onFileLoaded)) {
@@ -194,14 +229,14 @@
         }
 
 
-        amount        = param.files.length;
+        amount        = param.list.length;
         loadDecrement = amount;
         onFileLoaded  = param.onFileLoaded;
         onAllLoaded   = param.onAllLoaded;
         onError       = param.onError;
 
         for (i = 0; i < amount; i++) {
-            addFile(param.files[i]);
+            addFile(param.list[i].file, param.list[i].selector);
         }
     }
 
