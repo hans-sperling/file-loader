@@ -9,12 +9,12 @@
  *
  * fileLoader.require({
  *     list : [
- *         { file : 'loading-files/style1.css',     selector : 'head' },
- *         { file : 'loading-files/script1.js',     selector : 'head' },
- *         { file : 'loading-files/script2.min.js', selector : 'body' },
- *         { file : 'load/a/non-existing/file',     selector : 'head' },
- *         { file : 'loading-files/template1.html', selector : '.insert-template.t1' },
- *         { file : 'loading-files/template2.html', selector : '.insert-template.t2' },
+ *         { file : 'loading-files/style1.css',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/script1.js',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/script2.min.js', selector : document.querySelectorAll('body') },
+ *         { file : 'load/a/non-existing/file',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/template1.html', selector : document.querySelectorAll('.insert-template.t1') },
+ *         { file : 'loading-files/template2.html', selector : document.querySelectorAll('.insert-template.t2') }
  *     ],
  *     onFileLoaded : onFileLoaded,
  *     onAllLoaded  : onAllLoaded,
@@ -192,8 +192,7 @@
             file        = param.file,
             selector    = param.selector,
             splitList   = file.split('.'),
-            ext         = splitList[splitList.length - 1],
-            elements, elementsAmount, i;
+            ext         = splitList[splitList.length - 1];
 
         if (!file || !selector) {
             onError(item);
@@ -201,21 +200,18 @@
             return;
         }
 
-        elements       = document.querySelectorAll(selector);
-        elementsAmount = elements.length;
-
         switch (ext.toLocaleLowerCase()) {
             case 'js':
-                addNode(file, elements, getJsObject(file));
+                addNode(file, selector, getJsObject(file));
                 break;
             case 'css':
-                addNode(file, elements, getCssObject(file));
+                addNode(file, selector, getCssObject(file));
                 break;
             case 'html':
             case 'phtml':
             case 'php':
             default:
-                addFile(file, elements);
+                addFile(file, selector);
                 return;
         }
     }
