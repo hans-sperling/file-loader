@@ -34,12 +34,12 @@
 
             fileLoader.require({
                 list : [
-                    { file : 'loading-files/file1.js',       selector : 'head' },
-                    { file : 'loading-files/file2.min.js',   selector : 'body' },
-                    { file : 'load/a/non-existing/file.abc', selector : 'head' },
-                    { file : 'loading-files/file3.css',      selector : 'head' },
+                    { file : 'loading-files/style1.css',     selector : 'head' },
+                    { file : 'loading-files/script1.js',     selector : 'head' },
+                    { file : 'loading-files/script2.min.js', selector : 'body' },
+                    { file : 'load/a/non-existing/file',     selector : 'head' },
                     { file : 'loading-files/template1.html', selector : '.insert-template.t1' },
-                    { file : 'loading-files/template2.html', selector : '.insert-template.t2' }
+                    { file : 'loading-files/template2.html', selector : '.insert-template.t2' },
                 ],
                 onFileLoaded : onFileLoaded,
                 onAllLoaded  : onAllLoaded,
@@ -47,15 +47,15 @@
             });
 
             function onAllLoaded() {
-                console.info('index.html : All files has been loaded.')
+                console.info('index.html     -> All files has been loaded.')
             }
 
             function onFileLoaded(filename) {
-                console.log('index.html : File <' + filename + '> has been loaded.');
+                console.log('index.html     -> File <' + filename + '> has been loaded.');
             }
 
-            function onError(filename, domSelector) {
-                console.warn('index.html : File <' + filename + '> could not be loaded or added to <' + domSelector + '>.');
+            function onError(filename) {
+                console.warn('index.html     -> File <' + filename + '> could not be loaded.');
             }
         </script>
     </body>

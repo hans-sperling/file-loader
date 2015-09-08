@@ -4,33 +4,7 @@
  * @version 0.2.0
  * @return {{require:function()}}
  * @link https://github.com/hans-sperling/file-loader
- * @example
- * var fileLoader = new FileLoader();
- *
- * fileLoader.require({
- *     files : [
- *         'loading-files/file1.js',
-           'loading-files/file2.min.js',
-           'load/a/non-existing/file.abc',
-           'loading-files/file3.css'
- *     ],
- *     onFileLoaded : onFileLoaded,
- *     onAllLoaded  : onAllLoaded,
- *     onError      : onError
- * });
- *
- * function onAllLoaded() {
- *     console.info('All files has been loaded.')
- * }
- *
- * function onFileLoaded(filename) {
- *     console.log('File <' + filename + '> has been loaded.');
- * }
- *
- * function onError(filename) {
- *     console.warn('File <' + filename + '> could not be loaded.');
- * }
-*/
+ */
 ;var FileLoader = function FileLoader() {
     'use strict';
 
@@ -76,20 +50,14 @@
     /**
      * Returns a HTML-Link-Element for given href.
      *
-     * @param {String} href
-     * @param {number} amount
+     * @param {String} file
      * @returns {Array} - List of HTMLElements
      */
-    function getCSS(href, amount) {
-        var fileObject = [],
-            i;
-
-        for ( i = 0; i < amount; i++) {
-            fileObject[i]       = document.createElement('link');
-            fileObject[i].rel   = 'stylesheet';
-            fileObject[i].async = true;
-            fileObject[i].href  = href;
-        }
+    function getCssObject(file) {
+        var fileObject       = document.createElement('link');
+            fileObject.rel   = 'stylesheet';
+            fileObject.async = true;
+            fileObject.href  = file;
 
         return fileObject;
     }
@@ -98,32 +66,76 @@
     /**
      * Returns a HTML-Script-Element for given source file.
      *
-     * @param {String} src
-     * @param {Number} amount
+     * @param {String} file
      * @returns {Array} - List of HTMLElements
      */
-    function getJS(src, amount) {
-        var fileObject = [],
-            i;
-
-        for ( i = 0; i < amount; i++) {
-            fileObject[i]       = document.createElement('script');
-            fileObject[i].type  = 'text/javascript';
-            fileObject[i].async = true;
-            fileObject[i].src   = src;
-        }
+    function getJsObject(file) {
+        var fileObject       = document.createElement('script');
+            fileObject.type  = 'text/javascript';
+            fileObject.async = true;
+            fileObject.src   = file;
 
         return fileObject;
     }
 
 
-    function getTemplate(src) {
-        var fileContent = '';
+    function addFile(file, elements) {
+        var xhr = new XMLHttpRequest(),
+            i;
+
+        xhr.open("GET", file, true);
+        xhr.setRequestHeader('Content-type', 'text/html');
+        xhr.send();
+
+        xhr.onreadystatechange = function (e) {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                for (i = 0; i < elements.length; i++) {
+
+                    elements[i].innerHTML = xhr.responseText;
+                    onFileLoaded(file);
+                    loaded();
+                }
+            }
+            else if (xhr.readyState == 4 && xhr.status == 404) {
+                console.info('404');
+            }
+        };
+    }
 
 
-        //fileObject.src   = src; // ???
+    function addNode(file, elements, fileObject) {
+        var i, fileObjectClone;
 
-        return fileContent;
+        for (i = 0; i < elements.length; i++) {
+            fileObjectClone = fileObject.cloneNode(true);
+            elements[i].appendChild(fileObjectClone);
+
+            if (fileObjectClone.addEventListener) {
+                fileObjectClone.addEventListener('load', function () {
+                    onFileLoaded(file);
+                    loaded();
+                }, false);
+            }
+            else if (fileObjectClone.attachEvent) {
+                fileObjectClone.attachEvent('load', function () {
+                    onFileLoaded(file);
+                    loaded();
+                });
+            }
+            else {
+                fileObjectClone.onreadystatechange = function () {
+                    if (this.readyState in {loaded: 1, complete: 1}) {
+                        onFileLoaded(file);
+                        loaded();
+                    }
+                };
+            }
+
+            fileObjectClone.onerror = function () {
+                onError(file);
+                loaded();
+            };
+        }
     }
 
 
@@ -131,68 +143,40 @@
      * Adds the given file to the head of the DOM if possible and callbacks the onFileLoad-Function. If an error
      * occurred the callback onError will be called.
      *
-     * @param {String} src         - Location of the file
+     * @param {Object} item         - Location of the file
      * @param {String} domSelector -
      */
-    function addFile(src, domSelector) {
+    function manageFileLoading(item) {
         var fileObjects = [],
-            splitList  = src.split('.'),
-            ext        = splitList[splitList.length - 1],
-            selector   = domSelector || null,
-            selectorList, selectorListAmount, i;
+            param       = item || {},
+            file        = param.file,
+            selector    = param.selector,
+            splitList   = file.split('.'),
+            ext         = splitList[splitList.length - 1],
+            elements, elementsAmount, i;
 
-        if (!selector) {
-            onError(src, domSelector);
+        if (!file || !selector) {
+            onError(item);
             loaded();
             return;
         }
 
-        selectorList       = document.querySelectorAll(domSelector);
-        selectorListAmount = selectorList.length;
+        elements       = document.querySelectorAll(selector);
+        elementsAmount = elements.length;
 
         switch (ext.toLocaleLowerCase()) {
             case 'js':
-                fileObjects = getJS(src, selectorListAmount);
+                addNode(file, elements, getJsObject(file));
                 break;
             case 'css':
-                fileObjects = getCSS(src, selectorListAmount);
+                addNode(file, elements, getCssObject(file));
                 break;
             case 'html':
             case 'phtml':
             case 'php':
             default:
-                fileObjects = getTemplate(src);
-        }
-
-
-        for ( i = 0; i < selectorListAmount; i++) {
-            if (fileObjects[i].addEventListener) {
-                fileObjects[i].addEventListener('load', function () {
-                    onFileLoaded(src);
-                    loaded();
-                }, false);
-            }
-            else if (fileObjects[i].attachEvent) {
-                fileObjects[i].attachEvent('load', function () {
-                    onFileLoaded(src);
-                    loaded();
-                });
-            }
-            else {
-                fileObjects[i].onreadystatechange = function () {
-                    if (this.readyState in {loaded: 1, complete: 1}) {
-                        onFileLoaded(src);
-                        loaded();
-                    }
-                };
-            }
-
-            fileObjects[i].onerror = function () {
-                onError(src, domSelector);
-                loaded();
-            };
-
-            selectorList[i].appendChild(fileObjects[i]);
+                addFile(file, elements);
+                return;
         }
     }
 
@@ -212,22 +196,11 @@
         var param = parameters  || {},
             i, amount;
 
-        if (!isArray(param.list)) {
-            param.list = [];
-        }
-
-        if (!isFunction(param.onFileLoaded)) {
-            param.onFileLoaded = function() {};
-        }
-
-        if (!isFunction(param.onAllLoaded)) {
-            param.onAllLoaded = function() {};
-        }
-
-        if (!isFunction(param.onError)) {
-            param.onError = function() {};
-        }
-
+        // Validation
+        if (!isArray(param.list))            { param.list         = []; }
+        if (!isFunction(param.onFileLoaded)) { param.onFileLoaded = function() {}; }
+        if (!isFunction(param.onAllLoaded))  { param.onAllLoaded  = function() {}; }
+        if (!isFunction(param.onError))      { param.onError      = function() {}; }
 
         amount        = param.list.length;
         loadDecrement = amount;
@@ -236,7 +209,7 @@
         onError       = param.onError;
 
         for (i = 0; i < amount; i++) {
-            addFile(param.list[i].file, param.list[i].selector);
+            manageFileLoading(param.list[i]);
         }
     }
 
