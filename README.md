@@ -1,2 +1,2 @@
 # File-Loader
-Async file loader - Implements a given list of javascript and css files into the DOM-Head.
+Asynchronous file loader - Implements javascript and css wrapped and other files content into a given HTML-Node.

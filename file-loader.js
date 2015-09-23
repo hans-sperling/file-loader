@@ -1,18 +1,20 @@
 /**
- * Asynchronous file loader - Implements javascript and css file into the DOM-Head.
+ * Asynchronous file loader - Implements javascript and css wrapped and other files content into a given HTML-Node.
  *
- * @version 0.2.0
+ * @version 0.3.0
  * @return {{require:function()}}
  * @link https://github.com/hans-sperling/file-loader
  * @example
  * var fileLoader = new FileLoader();
  *
  * fileLoader.require({
- *     files : [
- *         'loading-files/file1.js',
-           'loading-files/file2.min.js',
-           'load/a/non-existing/file.abc',
-           'loading-files/file3.css'
+ *     list : [
+ *         { file : 'loading-files/style1.css',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/script1.js',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/script2.min.js', selector : document.querySelectorAll('body') },
+ *         { file : 'load/a/non-existing/file',     selector : document.querySelectorAll('head') },
+ *         { file : 'loading-files/template1.html', selector : document.querySelectorAll('.insert-template.t1') },
+ *         { file : 'loading-files/template2.html', selector : document.querySelectorAll('.insert-template.t2') }
  *     ],
  *     onFileLoaded : onFileLoaded,
  *     onAllLoaded  : onAllLoaded,
@@ -20,7 +22,7 @@
  * });
  *
  * function onAllLoaded() {
- *     console.info('All files has been loaded.')
+ *     console.log('All files has been loaded.')
  * }
  *
  * function onFileLoaded(filename) {
@@ -28,9 +30,9 @@
  * }
  *
  * function onError(filename) {
- *     console.warn('File <' + filename + '> could not be loaded.');
+ *     console.log('File <' + filename + '> could not be loaded.');
  * }
-*/
+ */
 ;var FileLoader = function FileLoader() {
     'use strict';
 
@@ -76,20 +78,14 @@
     /**
      * Returns a HTML-Link-Element for given href.
      *
-     * @param {String} href
-     * @param {number} amount
-     * @returns {Array} - List of HTMLElements
+     * @param  {String} file - Location of the file
+     * @return {Array}       - List of HTML-Elements
      */
-    function getCSS(href, amount) {
-        var fileObject = [],
-            i;
-
-        for ( i = 0; i < amount; i++) {
-            fileObject[i]       = document.createElement('link');
-            fileObject[i].rel   = 'stylesheet';
-            fileObject[i].async = true;
-            fileObject[i].href  = href;
-        }
+    function getCssObject(file) {
+        var fileObject       = document.createElement('link');
+            fileObject.rel   = 'stylesheet';
+            fileObject.async = true;
+            fileObject.href  = file;
 
         return fileObject;
     }
@@ -98,101 +94,125 @@
     /**
      * Returns a HTML-Script-Element for given source file.
      *
-     * @param {String} src
-     * @param {Number} amount
-     * @returns {Array} - List of HTMLElements
+     * @param  {String} file - Location of the file
+     * @return {Array}       - List of HTML-Elements
      */
-    function getJS(src, amount) {
-        var fileObject = [],
-            i;
-
-        for ( i = 0; i < amount; i++) {
-            fileObject[i]       = document.createElement('script');
-            fileObject[i].type  = 'text/javascript';
-            fileObject[i].async = true;
-            fileObject[i].src   = src;
-        }
+    function getJsObject(file) {
+        var fileObject       = document.createElement('script');
+            fileObject.type  = 'text/javascript';
+            fileObject.async = true;
+            fileObject.src   = file;
 
         return fileObject;
     }
 
 
-    function getTemplate(src) {
-        var fileContent = '';
+    /**
+     * Adds the content of the given file into the given HTML-Elements.
+     *
+     * @param {String} file     - Location of the file
+     * @param {Array}  elements - List of HTML-Elements to inset the files content
+     */
+    function addFile(file, elements) {
+        var xhr = new XMLHttpRequest(),
+            i;
 
+        xhr.open("GET", file, true);
+        xhr.setRequestHeader('Content-type', 'text/html');
+        xhr.send();
 
-        //fileObject.src   = src; // ???
-
-        return fileContent;
+        xhr.onreadystatechange = function (e) {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                for (i = 0; i < elements.length; i++) {
+                    elements[i].innerHTML = xhr.responseText;
+                    onFileLoaded(file);
+                    loaded();
+                }
+            }/*
+            else if (xhr.readyState == 4 && xhr.status == 404) {
+                console.info('404');
+            }*/
+        };
     }
 
 
     /**
-     * Adds the given file to the head of the DOM if possible and callbacks the onFileLoad-Function. If an error
-     * occurred the callback onError will be called.
+     * Adds the content of the given file wrapped in a specific HTML-Node and adds it into given HTML-Elements.
      *
-     * @param {String} src         - Location of the file
-     * @param {String} domSelector -
+     * @param {String}      file       - Location of the file
+     * @param {Array}       elements   - List of HTML-Elements to inset the files content
+     * @param {HTMLElement} fileObject - HTML-Element to add into elements
      */
-    function addFile(src, domSelector) {
-        var fileObjects = [],
-            splitList  = src.split('.'),
-            ext        = splitList[splitList.length - 1],
-            selector   = domSelector || null,
-            selectorList, selectorListAmount, i;
+    function addNode(file, elements, fileObject) {
+        var i, fileObjectClone;
 
-        if (!selector) {
-            onError(src, domSelector);
-            loaded();
-            return;
-        }
+        for (i = 0; i < elements.length; i++) {
+            fileObjectClone = fileObject.cloneNode(true);
+            elements[i].appendChild(fileObjectClone);
 
-        selectorList       = document.querySelectorAll(domSelector);
-        selectorListAmount = selectorList.length;
-
-        switch (ext.toLocaleLowerCase()) {
-            case 'js':
-                fileObjects = getJS(src, selectorListAmount);
-                break;
-            case 'css':
-                fileObjects = getCSS(src, selectorListAmount);
-                break;
-            case 'html':
-            case 'phtml':
-            case 'php':
-            default:
-                fileObjects = getTemplate(src);
-        }
-
-
-        for ( i = 0; i < selectorListAmount; i++) {
-            if (fileObjects[i].addEventListener) {
-                fileObjects[i].addEventListener('load', function () {
-                    onFileLoaded(src);
+            if (fileObjectClone.addEventListener) {
+                fileObjectClone.addEventListener('load', function () {
+                    onFileLoaded(file);
                     loaded();
                 }, false);
             }
-            else if (fileObjects[i].attachEvent) {
-                fileObjects[i].attachEvent('load', function () {
-                    onFileLoaded(src);
+            else if (fileObjectClone.attachEvent) {
+                fileObjectClone.attachEvent('load', function () {
+                    onFileLoaded(file);
                     loaded();
                 });
             }
             else {
-                fileObjects[i].onreadystatechange = function () {
+                fileObjectClone.onreadystatechange = function () {
                     if (this.readyState in {loaded: 1, complete: 1}) {
-                        onFileLoaded(src);
+                        onFileLoaded(file);
                         loaded();
                     }
                 };
             }
 
-            fileObjects[i].onerror = function () {
-                onError(src, domSelector);
+            fileObjectClone.onerror = function () {
+                onError(file);
                 loaded();
             };
+        }
+    }
 
-            selectorList[i].appendChild(fileObjects[i]);
+
+    /**
+     * Manages the file handling.
+     *
+     * @param {Object} item
+     * @param {String} item.file     - Location of the file
+     * @param {String} item.selector - HTML-Element to append the file to
+     */
+    function manageFileLoading(item) {
+        var fileObjects = [],
+            param       = item || {},
+            file        = param.file,
+            selector    = param.selector,
+            splitList   = file.split('.'),
+            ext         = splitList[splitList.length - 1];
+
+        if (!file || !selector) {
+            onError(item);
+            loaded();
+            return;
+        }
+
+        switch (ext.toLocaleLowerCase()) {
+            case 'js':
+                addNode(file, selector, getJsObject(file));
+                break;
+            case 'css':
+                addNode(file, selector, getCssObject(file));
+                break;
+            case 'html':
+            case 'phtml':
+            case 'php':
+            default:
+                addFile(file, selector);
+                return;
         }
     }
 
@@ -202,32 +222,23 @@
     /**
      *
      *
-     * @param {Object} parameters                   - Parameter-Object
-     * @param {Array}  parameters.files             - List of files that should be loaded
-     * @param {Function}  parameters.onFileLoaded - Callback function that will be called when a file has been successfully loaded
-     * @param {Function}  parameters.onAllLoaded    - Callback function that will be called when all files has been loaded
-     * @param {Function}  parameters.onError        - Callback function that will be called if an error occurs
+     * @param {Object}    parameters
+     * @param {Array}     parameters.list
+     * @param {String}    parameters.list.file     - Location of the file
+     * @param {String}    parameters.list.selector - HTML-Element to append the file to
+     * @param {Function}  parameters.onFileLoaded  - Callback function that will be called when a file has been successfully loaded
+     * @param {Function}  parameters.onAllLoaded   - Callback function that will be called when all files has been loaded
+     * @param {Function}  parameters.onError       - Callback function that will be called if an error occurs
      */
     function require (parameters) {
         var param = parameters  || {},
             i, amount;
 
-        if (!isArray(param.list)) {
-            param.list = [];
-        }
-
-        if (!isFunction(param.onFileLoaded)) {
-            param.onFileLoaded = function() {};
-        }
-
-        if (!isFunction(param.onAllLoaded)) {
-            param.onAllLoaded = function() {};
-        }
-
-        if (!isFunction(param.onError)) {
-            param.onError = function() {};
-        }
-
+        // Validation
+        if (!isArray(param.list))            { param.list         = []; }
+        if (!isFunction(param.onFileLoaded)) { param.onFileLoaded = function() {}; }
+        if (!isFunction(param.onAllLoaded))  { param.onAllLoaded  = function() {}; }
+        if (!isFunction(param.onError))      { param.onError      = function() {}; }
 
         amount        = param.list.length;
         loadDecrement = amount;
@@ -236,7 +247,7 @@
         onError       = param.onError;
 
         for (i = 0; i < amount; i++) {
-            addFile(param.list[i].file, param.list[i].selector);
+            manageFileLoading(param.list[i]);
         }
     }
 
