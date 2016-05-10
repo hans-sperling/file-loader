@@ -1,3 +1,4 @@
+/*global FileLoader */
 /**
  * Asynchronous file loader - Implements javascript and css wrapped and other files content into a given HTML-Node.
  *
@@ -49,7 +50,7 @@
      * @return {boolean}
      */
     function isArray(value) {
-        return Object.prototype.toString.call(value) == "[object Array]";
+        return Object.prototype.toString.call(value) === '[object Array]';
     }
 
     /**
@@ -59,7 +60,7 @@
      * @return {boolean}
      */
     function isFunction(value) {
-        return Object.prototype.toString.call(value) == "[object Function]";
+        return Object.prototype.toString.call(value) === '[object Function]';
     }
 
     // --------------------------------------------------------------------------------------------------------- Private
@@ -116,12 +117,12 @@
         var xhr = new XMLHttpRequest(),
             i;
 
-        xhr.open("GET", file, true);
+        xhr.open('GET', file, true);
         xhr.setRequestHeader('Content-type', 'text/html');
         xhr.send();
 
-        xhr.onreadystatechange = function (e) {
-            if (xhr.readyState == 4 && xhr.status == 200) {
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
                 for (i = 0; i < elements.length; i++) {
                     elements[i].innerHTML = xhr.responseText;
                     onFileLoaded(file);
@@ -145,35 +146,38 @@
     function addNode(file, elements, fileObject) {
         var i, fileObjectClone;
 
+        function test() {
+            onFileLoaded(file);
+            loaded();
+        }
+
+        function test2(){
+            if (this.readyState in {loaded: 1, complete: 1}) {
+                onFileLoaded(file);
+                loaded();
+            }
+        }
+
+        function test3() {
+            onError(file);
+            loaded();
+        }
+
         for (i = 0; i < elements.length; i++) {
             fileObjectClone = fileObject.cloneNode(true);
             elements[i].appendChild(fileObjectClone);
 
             if (fileObjectClone.addEventListener) {
-                fileObjectClone.addEventListener('load', function () {
-                    onFileLoaded(file);
-                    loaded();
-                }, false);
+                fileObjectClone.addEventListener('load', test, false);
             }
             else if (fileObjectClone.attachEvent) {
-                fileObjectClone.attachEvent('load', function () {
-                    onFileLoaded(file);
-                    loaded();
-                });
+                fileObjectClone.attachEvent('load', test);
             }
             else {
-                fileObjectClone.onreadystatechange = function () {
-                    if (this.readyState in {loaded: 1, complete: 1}) {
-                        onFileLoaded(file);
-                        loaded();
-                    }
-                };
+                fileObjectClone.onreadystatechange = test2;
             }
 
-            fileObjectClone.onerror = function () {
-                onError(file);
-                loaded();
-            };
+            fileObjectClone.onerror = test3;
         }
     }
 

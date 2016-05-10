@@ -1,0 +1,30 @@
+{
+  "name": "file-loader",
+  "version": "1.0.0",
+  "description": "Implements javascript and css wrapped as script or link node and other files content as plain text into a given HTML-Node",
+  "keywords": [
+    "file",
+    "loading",
+    "async",
+    "javascript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hans-sperling/file-loader"
+  },
+  "devDependencies": {
+    "grunt": "latest",
+    "grunt-cli": "latest",
+    "grunt-contrib-uglify": "latest"
+  },
+  "bugs": {
+    "url": "https://github.com/hans-sperling/file-loader/issues",
+    "email": "info@bluejade.de"
+  },
+  "contributors": [
+    {
+      "name": "Danny Grübl",
+      "email": "info@bluejade.de"
+    }
+  ]
+}
