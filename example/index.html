@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>File-Loader</title>
+        <style>
+            body {
+                /* Will be overwritten by file3.css */
+                background : #EF5E48;
+            }
+
+            .insert-template {
+                width:100%;
+                height:auto;
+                background: rgba(0,0,0,0.1);
+            }
+        </style>
+    </head>
+    <body class="bright">
+        <div class="wrapper">
+            <h1>File-Loader</h1>
+            <p>Example - View output in the console and CSS-Color of the body.</p>
+        </div>
+
+        <!-- Load the script-loader file -->
+        <script src="../file-loader.js"></script>
+
+        <div class="insert-template t1"></div>
+        <div class="insert-template t1"></div>
+        <div class="insert-template t2"></div>
+        <!-- Usage of the File-Loader -->
+        <script>
+            var fileLoader = new FileLoader();
+
+            fileLoader.require({
+                list : [
+                    { file : 'loading-files/style1.css',     selector : document.querySelectorAll('head') },
+                    { file : 'loading-files/script1.js',     selector : document.querySelectorAll('head') },
+                    { file : 'loading-files/script2.min.js', selector : document.querySelectorAll('body') },
+                    { file : 'load/a/non-existing/file',     selector : document.querySelectorAll('head') },
+                    { file : 'loading-files/template1.html', selector : document.querySelectorAll('.insert-template.t1') },
+                    { file : 'loading-files/template2.html', selector : document.querySelectorAll('.insert-template.t2') }
+                ],
+                onFileLoaded : onFileLoaded,
+                onAllLoaded  : onAllLoaded,
+                onError      : onError
+            });
+
+            function onAllLoaded() {
+                console.info('index.html     -> All files has been loaded.')
+            }
+
+            function onFileLoaded(filename) {
+                console.log('index.html     -> File <' + filename + '> has been loaded.');
+            }
+
+            function onError(filename) {
+                console.warn('index.html     -> File <' + filename + '> could not be loaded.');
+            }
+        </script>
+    </body>
+</html>

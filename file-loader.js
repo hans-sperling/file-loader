@@ -3,7 +3,6 @@
  *
  * @version 0.3.0
  * @return {{require:function()}}
- * @link https://github.com/hans-sperling/file-loader
  * @example
  * var fileLoader = new FileLoader();
  *
@@ -17,7 +16,7 @@
  *         { file : 'loading-files/template2.html', selector : document.querySelectorAll('.insert-template.t2') }
  *     ],
  *     onFileLoaded : onFileLoaded,
- *     onAllLoaded  : onAllLoaded,
+ *     onAllLoaded  : onAllLoded,
  *     onError      : onError
  * });
  *
@@ -79,7 +78,7 @@
      * Returns a HTML-Link-Element for given href.
      *
      * @param  {String} file - Location of the file
-     * @return {Array}       - List of HTML-Elements
+     * @return {Object}      - HTML-Element
      */
     function getCssObject(file) {
         var fileObject       = document.createElement('link');
@@ -95,7 +94,7 @@
      * Returns a HTML-Script-Element for given source file.
      *
      * @param  {String} file - Location of the file
-     * @return {Array}       - List of HTML-Elements
+     * @return {Object}      - HTML-Element
      */
     function getJsObject(file) {
         var fileObject       = document.createElement('script');
@@ -139,9 +138,9 @@
     /**
      * Adds the content of the given file wrapped in a specific HTML-Node and adds it into given HTML-Elements.
      *
-     * @param {String}      file       - Location of the file
-     * @param {Array}       elements   - List of HTML-Elements to inset the files content
-     * @param {HTMLElement} fileObject - HTML-Element to add into elements
+     * @param {String} file       - Location of the file
+     * @param {Array}  elements   - List of HTML-Elements to inset the files content
+     * @param {Object} fileObject - HTML-Element to add into elements
      */
     function addNode(file, elements, fileObject) {
         var i, fileObjectClone;
@@ -187,12 +186,11 @@
      * @param {String} item.selector - HTML-Element to append the file to
      */
     function manageFileLoading(item) {
-        var fileObjects = [],
-            param       = item || {},
-            file        = param.file,
-            selector    = param.selector,
-            splitList   = file.split('.'),
-            ext         = splitList[splitList.length - 1];
+        var param     = item || {},
+            file      = param.file,
+            selector  = param.selector,
+            splitList = file.split('.'),
+            ext       = splitList[splitList.length - 1];
 
         if (!file || !selector) {
             onError(item);
@@ -207,9 +205,6 @@
             case 'css':
                 addNode(file, selector, getCssObject(file));
                 break;
-            case 'html':
-            case 'phtml':
-            case 'php':
             default:
                 addFile(file, selector);
                 return;
@@ -230,7 +225,7 @@
      * @param {Function}  parameters.onAllLoaded   - Callback function that will be called when all files has been loaded
      * @param {Function}  parameters.onError       - Callback function that will be called if an error occurs
      */
-    function require (parameters) {
+    this.require = function require(parameters) {
         var param = parameters  || {},
             i, amount;
 
@@ -249,11 +244,5 @@
         for (i = 0; i < amount; i++) {
             manageFileLoading(param.list[i]);
         }
-    }
-
-    // ---------------------------------------------------------------------------------------------------------- Return
-
-    return {
-        require : require
     };
 };
