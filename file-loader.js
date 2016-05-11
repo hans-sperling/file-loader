@@ -1,4 +1,3 @@
-/*global FileLoader */
 /**
  * Asynchronous file loader - Implements javascript and css wrapped and other files content into a given HTML-Node.
  *
@@ -33,7 +32,7 @@
  *     console.log('File <' + filename + '> could not be loaded.');
  * }
  */
-;var FileLoader = function FileLoader() {
+var FileLoader = function () {
     'use strict';
 
     var loadDecrement = 0,
