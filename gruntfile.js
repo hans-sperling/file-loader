@@ -9,7 +9,7 @@ module.exports = function(grunt) {
             },
             build: {
                 src: '<%= pkg.name %>.js',
-                dest: 'build/<%= pkg.name %>.min.js'
+                dest: 'build/<%= pkg.name %>_v<%= pkg.version %>.min.js'
             }
         }
     });
@@ -18,6 +18,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify']);
+    grunt.registerTask('default', ['uglify', 'copy']);
 
 };
