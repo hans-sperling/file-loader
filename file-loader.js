@@ -112,7 +112,7 @@ var FileLoader = function () {
      * @param {String} file     - Location of the file
      * @param {Array}  elements - List of HTML-Elements to inset the files content
      */
-    function addFile(file, elements) {
+    function addFileContent(file, elements) {
         var xhr = new XMLHttpRequest(),
             i;
 
@@ -145,19 +145,19 @@ var FileLoader = function () {
     function addNode(file, elements, fileObject) {
         var i, fileObjectClone;
 
-        function test() {
+        function onLoad() {
             onFileLoaded(file);
             loaded();
         }
-
-        function test2(){
+        
+        function onLoadCondition() {
             if (this.readyState in {loaded: 1, complete: 1}) {
                 onFileLoaded(file);
                 loaded();
             }
         }
-
-        function test3() {
+        
+        function onAnyError() {
             onError(file);
             loaded();
         }
@@ -167,16 +167,16 @@ var FileLoader = function () {
             elements[i].appendChild(fileObjectClone);
 
             if (fileObjectClone.addEventListener) {
-                fileObjectClone.addEventListener('load', test, false);
+                fileObjectClone.addEventListener('load', onLoad, false);
             }
             else if (fileObjectClone.attachEvent) {
-                fileObjectClone.attachEvent('load', test);
+                fileObjectClone.attachEvent('load', onLoad);
             }
             else {
-                fileObjectClone.onreadystatechange = test2;
+                fileObjectClone.onreadystatechange = onLoadCondition;
             }
 
-            fileObjectClone.onerror = test3;
+            fileObjectClone.onerror = onAnyError;
         }
     }
 
@@ -209,7 +209,7 @@ var FileLoader = function () {
                 addNode(file, selector, getCssObject(file));
                 break;
             default:
-                addFile(file, selector);
+                addFileContent(file, selector);
                 return;
         }
     }
